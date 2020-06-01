@@ -7,6 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%
 clear;
 clc;
+format long
 err=1e-9;
 InfN=1e8;
 output=1;%output txt file or not
@@ -25,10 +26,10 @@ x0=0;y0=0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 h0_v=500./2;
 L_v=linspace(150,1000,5);
-L_v=(L_v(1:end-1)+L_v(2:end))./2;
+% L_v=(L_v(1:end-1)+L_v(2:end))./2;
 angle1=0; k1_v=tand(-angle1);
 angle2=linspace(1,45,5);
-angle2=(angle2(1:end-1)+angle2(2:end))./2;
+% angle2=(angle2(1:end-1)+angle2(2:end))./2;
 k2_v=tand(-angle2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 totalCount=length(h0_v)*length(L_v)*length(angle1)*length(angle2);
@@ -40,12 +41,14 @@ for h0_vi=h0_v
             for k2_vi=k2_v
                 fprintf('\n######################################################');
                 fprintf('\nParameters:\n\th0=%.4f\n\tL=%.4f\n\tk1=%.4f\n\tk2=%.4f',h0_vi,L_vi,k1_vi,k2_vi);
-                f1_d(d)=vpa(subs(f1,[L,h0,k1,k2],[L_vi,h0_vi,k1_vi,k2_vi]));
+                vars=[L_vi,h0_vi,k1_vi,k2_vi];
+                vars=sym(vars*eps)/eps;
+                f1_d(d)=vpa(subs(f1,[L,h0,k1,k2],vars));
                 D2=-h0_vi;D1=double(-k1_vi.*h0_vi./(k1_vi+k2_vi));
                 d0Vec=[];
                 if k1_v+k2_v<0
                     [d0Vec(1,1),d0Vec(1,2)]=solveMono(f1_d,[-InfN,D2]);
-                    if abs(d0Vec(1,2))>err
+                    if abs(d0Vec(1,2))>err || abs(d0Vec(1,1)+h0_vi)<err
                         [d0Vec(2,1),d0Vec(2,2)]=solveMono(f1_d,[0,InfN]);
                         if abs(d0Vec(2,2))>err && D1~=0
                             [d0Vec(3,1),d0Vec(3,2)]=solveMono(f1_d,[D1,0]);
@@ -62,7 +65,9 @@ for h0_vi=h0_v
                     c_v=sqrt(L_vi.*(h0_vi+d_v)./(k2_vi-k1_vi.*(1+h0_vi./d_v)));
                     h_v=-d_v.*exp(c_v.^2.*k1_vi.^2./(2.*d_v.^2));
                     b_v=-c_v.^2.*k1_vi./d_v;
-                    ySolver=vpa(subs(y,[h,b,c,d],[h_v,b_v,c_v,d_v]));
+                    solVars=[h_v,b_v,c_v,d_v];
+                    solVars=sym(solVars*eps)/eps;
+                    ySolver=vpa(subs(y,[h,b,c,d],solVars));
                     fprintf('\nResult:\n\th=%.4f\n\tb=%.4f\n\tc=%.4f\n\td=%.4f',h_v,b_v,c_v,d_v);
                     fprintf('\ny=%s',ySolver);
                     yS(x)=ySolver;yp(x)=diff(yS,x);
@@ -70,8 +75,8 @@ for h0_vi=h0_v
                     RCheck=abs([double(yS(x0)-y0),double(yS(x1)-y1),double(yp(x0)-k1_vi),double(yp(x1)-k2_vi)]);
                     if sum(RCheck<err)~=4
                         fprintf('\nResult Check Wrong:\n\tyS(x0)-y0=%f\n\tyS(x1)-y1=%f\n\typ(x0)-k1=%f\n\typ(x1)-k2=%f',double(yS(x0)-y0),double(yS(x1)-y1),double(yp(x0)-k1_vi),double(yp(x1)-k2_vi));
-                        unsolveCount=unSolveCount+1;
-                        unsolvedPara(unSolveCount,:)=[L_vi,h0_vi,k1_vi,k2_vi];
+                        unsolveCount=unsolveCount+1;
+                        unsolvedPara(unsolveCount,:)=[L_vi,h0_vi,k1_vi,k2_vi];
                         continue;
                     end
                     hold on;plotFuncOn(0,L_vi,ySolver,figHd);
