@@ -8,7 +8,7 @@ syms x y zv
 r2=x.^2+2.*y.^2;
 z=sqrt(r2)+30;
 % z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
-f=z-zv;
+f=z-zv;z(x,y)=z;
 zFunc=matlabFunction(z);
 xv=linspace(-20,20,100);yv=xv;
 [xGrid,yGrid]=ndgrid(xv,yv);
@@ -40,6 +40,10 @@ nPoints=100;pos=rand(nPoints,nDim);%each row as a point
 Ndz=20;dzMat=ones(nPoints,Ndz).*10;
 stopFlag=0;activePList=1:nPoints;
 pos=repmat(boundaryLim(1,:),nPoints,1)+repmat(boundaryLim(2,:)-boundaryLim(1,:),nPoints,1).*pos;
+% for iDim=1:nDim-1
+%     pos(activePList,iDim)=boundaryLim(1,iDim)+pos(activePList,iDim).*(boundaryLim(2,iDim)-boundaryLim(1,iDim));
+% end
+% pos(activePList,end)=z(pos(activePList,1),pos(activePList,2));%Initial Positions
 pos(activePList,end)=zFunc(pos(activePList,1),pos(activePList,2));%Initial Positions
 GVec=repmat(GVec,nPoints,1);
 vmVec=repmat(vmVec,nPoints,1);
@@ -47,6 +51,7 @@ vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
 dtVec=ones(nPoints,1).*dt;
 count=0;toc;tic;
 while stopFlag==0 && count<400 || count==0
+%     sBV_v=double(subs(sBV,{x,y},{pos(activePList,1),pos(activePList,2)}));
     sBV_v=sBVFunc(pos(activePList,1),pos(activePList,2));
     FgpVec(activePList,:)=GVec(activePList,:)-repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim).*sBV_v;
     if count==0
@@ -113,6 +118,13 @@ while stopFlag==0 && count<400 || count==0
         vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
 %         pos=oldPos;
     end
+%     %f_norm dont change
+%     if count~=0
+%         [r_fCons,~]=find(abs(vecnorm(f,2,2)-vecnorm(fOld,2,2))<fError);
+%         if ~isempty(r_fCons)
+%             dtVec(r_fCons)=dtVec(r_fCons).*0.99;
+%         end
+%     end    
     count=count+1
     toc;
 end
