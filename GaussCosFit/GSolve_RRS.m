@@ -8,12 +8,12 @@ syms x y zv
 r2=x.^2+2.*y.^2;
 z=sqrt(r2)+30;
 % z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
-f=z-zv;
 zFunc=matlabFunction(z);
+fFunc=matlabFunction(zFunc-zv);varsList=symvar(sym(fFunc));
 xv=linspace(-20,20,100);yv=xv;
 [xGrid,yGrid]=ndgrid(xv,yv);
 zGrid=zFunc(xGrid,yGrid);
-rpics=3;cpics=2;
+rpics=2;cpics=2;
 figure(1);
 subplot(rpics,cpics,1);
 plot3D(xGrid,yGrid,zGrid,zGrid);xlabel('x');ylabel('y');zlabel('z');hold on;
@@ -28,7 +28,7 @@ mu=0.1;%friction factor
 nDim=3;
 GVec=zeros(1,nDim);GVec(end)=-1;
 GVec=GVec.*m0*g;
-sVec=[diff(f,x),diff(f,y),diff(f,zv)];
+sVec=jacobian(fFunc,varsList);
 sBV=sVec./norm(sVec);
 sBVFunc=matlabFunction(sBV);
 boundaryLim=...
@@ -36,7 +36,7 @@ boundaryLim=...
       20,20,20];%Higher Lim
   %Dim1,Dim2,Dim3
 
-nPoints=100;pos=rand(nPoints,nDim);%each row as a point
+nPoints=1000;pos=rand(nPoints,nDim);%each row as a point
 Ndz=20;dzMat=ones(nPoints,Ndz).*10;
 stopFlag=0;activePList=1:nPoints;
 pos=repmat(boundaryLim(1,:),nPoints,1)+repmat(boundaryLim(2,:)-boundaryLim(1,:),nPoints,1).*pos;
@@ -45,18 +45,20 @@ GVec=repmat(GVec,nPoints,1);
 vmVec=repmat(vmVec,nPoints,1);
 vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
 dtVec=ones(nPoints,1).*dt;
-count=0;toc;tic;
+count=0;
 while stopFlag==0 && count<400 || count==0
-    sBV_v=sBVFunc(pos(activePList,1),pos(activePList,2));
+    posActiCell=mat2cell(pos(activePList,1:nDim-1),length(activePList),ones(1,nDim-1));
+    sBV_v=sBVFunc(posActiCell{:});
+%     sBV_v=sBVFunc(pos(activePList,1),pos(activePList,2));
     FgpVec(activePList,:)=GVec(activePList,:)-repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim).*sBV_v;
     if count==0
-        f=zeros(size(FgpVec));
-        fOld=f;
+        fVec=zeros(size(FgpVec));
+        fOld=fVec;
     else
-        fOld=f;
-        f(activePList,:)=-abs(repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim)).*vmVec(activePList,:)./vmVnorm(activePList,:).*mu;
+        fOld=fVec;
+        fVec(activePList,:)=-abs(repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim)).*vmVec(activePList,:)./vmVnorm(activePList,:).*mu;
     end
-    aVec=(FgpVec+f)./m0;
+    aVec=(FgpVec+fVec)./m0;
     dvVec=aVec.*dtVec;
     vmVec(activePList,:)=vmVec(activePList,:)+dvVec(activePList,:);
     vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
@@ -64,26 +66,20 @@ while stopFlag==0 && count<400 || count==0
     rVec(activePList,:)=vmVec(activePList,:).*dtVec(activePList,:);
     oldPos=pos;
     pos(activePList,:)=pos(activePList,:)+rVec(activePList,:);
-    pos(activePList,end)=z(pos(activePList,1),pos(activePList,2));
+    pos(activePList,end)=zFunc(pos(activePList,1),pos(activePList,2));
     dz=pos(:,end)-oldPos(:,end);
     dzMat=circshift(dzMat,-1,2);dzMat(:,end)=dz;dzMatAver=mean(dzMat,2);
-    figure(1);subplot(rpics,cpics,1);hold on;
-    scatter3(pos(:,1),pos(:,2),pos(:,3),'.');title('POS');
-%     subplot(rpics,cpics,2);hold on;scatter(repmat(count,nPoints,1),vmVec(:,1),'.');title('Vx');
-%     subplot(rpics,cpics,3);hold on;scatter(repmat(count,nPoints,1),vmVec(:,2),'.');title('Vy');
-%     subplot(rpics,cpics,4);hold on;scatter(repmat(count,nPoints,1),vmVec(:,end),'.');title('Vz');  
-%     subplot(rpics,cpics,2);hold on;scatter(repmat(count,nPoints,1),aVec(:,1),'.');title('ax');
-%     subplot(rpics,cpics,3);hold on;scatter(repmat(count,nPoints,1),aVec(:,2),'.');title('ay');
-%     subplot(rpics,cpics,4);hold on;scatter(repmat(count,nPoints,1),aVec(:,end),'.');title('az');    
-    subplot(rpics,cpics,2);hold on;scatter(repmat(count,nPoints,1),pos(:,1),'.');title('x');
-    subplot(rpics,cpics,3);hold on;scatter(repmat(count,nPoints,1),pos(:,2),'.');title('y');
-    subplot(rpics,cpics,4);hold on;scatter(repmat(count,nPoints,1),pos(:,end),'.');title('z');
-    if count>Ndz
-        subplot(rpics,cpics,5);hold on;scatter(repmat(count,nPoints,1),dzMatAver,'.');title('dzA');
+    figure(1);subplot(rpics,cpics,1);
+    if exist('handleS','var')
+        delete(handleS);
     end
-%     subplot(rpics,cpics,5);hold on;scatter(repmat(count,length(dz),1),dz,'.');title('dz');
-%     subplot(rpics,cpics,6);hold on;scatter(repmat(count,length(activePList),1),dz,'.');title('dz');
-    subplot(rpics,cpics,6);hold on;scatter(repmat(count,length(activePList),1),activePList,'.');title('activePList');
+    hold on;
+    handleS=scatter3(pos(:,1),pos(:,2),pos(:,3),'.');title('POS');
+    subplot(rpics,cpics,2);hold on;scatter(repmat(count,nPoints,1),pos(:,end),'.');title('z');
+    if count>Ndz
+        subplot(rpics,cpics,3);hold on;scatter(repmat(count,nPoints,1),dzMatAver,'.');title('dzA');
+    end
+    subplot(rpics,cpics,4);hold on;scatter(repmat(count,length(activePList),1),activePList,'.');title('activePList');
     drawnow;
     %velocity near zero
     v0Index=find(abs(vmVec(:,end))<vError);
@@ -113,8 +109,7 @@ while stopFlag==0 && count<400 || count==0
         vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
 %         pos=oldPos;
     end
-    count=count+1
-    toc;
+    count=count+1;
 end
 % minPos=pos(find(abs(pos(:,end)-min(pos(:,end)))<0.1),:);
 % figure;plot(minPos(:,1),minPos(:,2),'*');toc;
