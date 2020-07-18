@@ -6,12 +6,11 @@ clear;clc;tic;
 clf;
 syms x1 x2 x3
 r2=x1.^2+2.*x2.^2;
-r3=x1.^2+3.*x2.^2+2.*x3.^2;
 % z=cos(x1).*x1;
 % z=x1.^5./10000;
 % z=sqrt(r2)+30;
 % z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
-z=sqrt(r3)+30;
+z=sqrt(r2)+30+x3;
 zFunc=matlabFunction(z);
 boundaryLim=...
     [-20,-20,-20,-20;%Lower Lim
@@ -52,8 +51,8 @@ GVec=zeros(1,nDim);GVec(end)=-1;
 GVec=GVec.*m0*g;
 sVec=jacobian(fFunc,varsList);
 sBV=sVec./norm(sVec);
-sBVFunc=matlabFunction(sBV);varBvList=symvar(sBV);varBvListStr=string(varBvList);
-[BvIndex,varsIndex]=find(varsListStr==varBvListStr');nVarBv=length(varBvList);
+sBVFunc=matlabFunction(sBV);varBvList=symvar(sBV);varB
+nVarBv=length(varBvList);
 
 nPoints=1000;
 activePList=1:nPoints;
@@ -69,7 +68,7 @@ Ndz=20;dzMat=ones(nPoints,Ndz).*10;
 stopFlag=0;
 count=0;
 while stopFlag==0 && count<400 || count==0
-    posActiCell_BV=mat2cell(pos(activePList,varsIndex),length(activePList),ones(1,nVarBv));
+    posActiCell_BV=mat2cell(pos(activePList,1:nDim-1),length(activePList),ones(1,nDim-1));
     sBV_v=sBVFunc(posActiCell_BV{:});
     FgpVec(activePList,:)=GVec(activePList,:)-repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim).*sBV_v;
     if count==0
@@ -96,7 +95,7 @@ while stopFlag==0 && count<400 || count==0
     end
     hold on;
     if nVar>=3
-    handleS=scatter3(pos(:,1),pos(:,2),pos(:,end),'.');title('Position');
+    handleS=scatter3(pos(:,1),pos(:,2),pos(:,3),'.');title('Position');
     else %nvar=2
         handleS=scatter(pos(:,1),pos(:,2),'.');title('Position');
     end
@@ -140,7 +139,7 @@ end
 figure;
 % plot(pos(:,1),pos(:,2),'*');
 if nVar>=3
-    scatter3(pos(:,1),pos(:,2),pos(:,end),'.');
+    scatter3(pos(:,1),pos(:,2),pos(:,3),'.');
 else % nVar=2
     scatter(pos(:,1),pos(:,2),'.');
 end
