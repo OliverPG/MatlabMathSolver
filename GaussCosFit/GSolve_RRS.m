@@ -4,9 +4,9 @@
 
 clear;clc;tic;
 clf;
-syms x1 x2 x3
+syms x1 x2 x3 x4
 r2=x1.^2+2.*x2.^2;
-r3=x1.^2+3.*x2.^2+2.*x3.^2;
+r3=x1.^2+3.*x2.^2+2.*x3.^2+2.*x4.^2;
 % z=cos(x1).*x1;
 % z=x1.^5./10000;
 % z=sqrt(r2)+30;
@@ -14,8 +14,8 @@ r3=x1.^2+3.*x2.^2+2.*x3.^2;
 z=sqrt(r3)+30;
 zFunc=matlabFunction(z);
 boundaryLim=...
-    [-20,-20,-20,-20;%Lower Lim
-      20,20,20,20];%Higher Lim
+    [-20,-20,-20,-20,-20;%Lower Lim
+      20,20,20,20,20];%Higher Lim
   %Dim1,Dim2,Dim3
 syms zv
 fFunc=matlabFunction(zFunc-zv);varsList=symvar(sym(fFunc));varsListStr=string(varsList);
@@ -31,7 +31,7 @@ if nVar>=3
     [x1Grid,x2Grid]=ndgrid(x1v,x2v);
     xyuGridCell=[{x1Grid},{x2Grid}];
     if nVar>3
-        uCell=num2cell(mean(boundaryLim(3:end-1)));
+        uCell=num2cell(mean(boundaryLim(:,3:end-1)));
         xyuGridCell=[xyuGridCell,uCell];
     end
     zGrid=zFunc(xyuGridCell{:});
