@@ -15,10 +15,10 @@ syms L h0 k1 k2
 syms f1 f2
 f1=h0+d.*(1-exp(-L.*(k2+k1.*(1+h0./d))./(2.*(h0+d))));
 %%%Parameters set%%%%%%%%%%%%
-h0_v=[164.99483146,150];
-L_v=[195.8773421,180];
-angle1=-16.52037156; k1_v=tand(angle1);
-angle2=[-32.63678913,-20]; k2_v=tand(angle2);
+h0_v=[31.62];
+L_v=[156.85376343];
+angle1=-5.19889199; k1_v=tand(angle1);
+angle2=[-0.5]; k2_v=tand(angle2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lenH=length(h0_v);lenL=length(L_v);
 lenAng1=length(angle1);lenAng2=length(angle2);

@@ -24,11 +24,11 @@ f1B=exp(-L.*(k2+k1.*(1+h0./d))./(2.*(h0+d)));
 %%%Parameters set%%%%%%%%%%%%
 x0=0;y0=0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-h0_v=500./2;
-L_v=linspace(150,1000,9);
+h0_v=31.40;
+L_v=164.51;
 % L_v=(L_v(1:end-1)+L_v(2:end))./2;
-angle1=0; k1_v=tand(-angle1);
-angle2=linspace(1,45,9);
+angle1=3.45354838; k1_v=tand(-angle1);
+angle2=1;
 % angle2=(angle2(1:end-1)+angle2(2:end))./2;
 k2_v=tand(-angle2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
