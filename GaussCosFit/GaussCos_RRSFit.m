@@ -1,8 +1,11 @@
 clear;clc;
-syms x y 
-syms a1 a2 a3 a4 a5 f00
-a=[a1,a2,a3,a4,a5];
-f=a1*exp(a2*x^2+a3*x)*cos(a4*x)+a5-y;
+syms x y yv
+syms a1 a2 a3 a4 a5 a6 a7 f00
+a=[a1,a2,a3,a4,a5,a6,a7];
+% f=a1*exp(a2*x^2+a3*x)*cos(a4*x)+a5-y;
+y=(a1*exp(a2*x^2+a3*x)+a4)*cos(x/a5+a6)+a7; yHd=matlabFunction(y);
+f0=y-yv; f0Hd=matlabFunction(f0);
+nParaVars=7;
 % f=a1+a2+a3+a4+a5;
 % for indexa=1:length(a)
 %     b{indexa}=solve(f,a(indexa));
@@ -11,12 +14,22 @@ fre=[300;470;640;725;810;980;1150;1320;1490;1575;1660;1830;2000];
 rcs=[3.50266273829231;7.18167481560552;8.29853604322728;8.27168802473965;7.23349089331251;4.78699634777701;-0.446225679851643;-10.2257061777637;-6.08043729857107;-3.19274369835503;-1.62180305353850;-0.425360901742028;-1.50920384069627];
 a7Esti=mean(rcs);
 gaussY=rcs-a7Esti;
-gausHd=@(x)sum((a(1).*exp(-a(2).*(fre-a(3)).^2)+a(4)).^2);
-% fsHd=@(x)sum((x(1).*exp(-1./x(2).*(fre-x(3)).^2).*cos(x(4).*fre)+x(5)-rcs).^2);
-[x0,fval,exitFlag]=GlobalSolve(gausHd,4)
-plot(fre,gaussY,'.')
-syms xx
-ty=x0(1).*exp(-x0(2).*(xx-x0(3)).^2)+x0(4);
+symvar(f0)
+zFi=funcByVal(f0Hd,8:9,[fre,rcs]);
+zFunc=sum(zFi.^2);
+zFuncHd=matlabFunction(zFunc);
+
+scatterFig=figure;
+plot(fre,rcs,'O');
+% a1~a7, zLim
+bdLim=[0.01,-10,min(fre),min(rcs),fre(2)-fre(1),min(fre),a7Esti-abs(min(rcs))/2,-100;
+    max(rcs),10,max(fre),max(rcs),max(fre)-min(fre),max(fre),a7Esti+abs(min(rcs))/2,100]
+[minPos,figR]=localMinsRRS(zFuncHd,bdLim);
+[minZ,minR]=min(minPos(:,end));
+yR=funcByVal(yHd,1:nParaVars,minPos(minR,1:nParaVars));
+% hold on;
+% plotFuncOn(min(fre),max(fre),matlabFunction(yR),scatterFig);
+plotFuncOn(min(fre),max(fre),yR,scatterFig);
 %%
 % ty=10.*exp(-1/4e5.*(xx+200).^2).*cos(0.5/pi.*(xx+150)./10)+5;%;
 hold on;plotFuncOn(300,2000,ty,1);

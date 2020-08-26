@@ -1,48 +1,48 @@
-%飞沙走石法(FeiShaZouShiFa)
-%Random Running Stones
-%Expulso
-
-clear;clc;
-syms a1 a2 a3 a4
-% Test part1, formulas for different dims
-% r2=x1.^2+2.*x2.^2;
-% r3=x1.^2+3.*x2.^2+2.*x3.^2+2.*x4.^2;
-% z=cos(x1).*x1;
-% z=x1.^5./10000;
-% z=sqrt(r2)+30;
-% z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
-% z=sqrt(r3)+30;
+% %飞沙走石法(FeiShaZouShiFa)
+% %Random Running Stones
+% %Expulso
+% 
+% clear;clc;
+% syms a1 a2 a3 a4
+% % Test part1, formulas for different dims
+% % r2=x1.^2+2.*x2.^2;
+% % r3=x1.^2+3.*x2.^2+2.*x3.^2+2.*x4.^2;
+% % z=cos(x1).*x1;
+% % z=x1.^5./10000;
+% % z=sqrt(r2)+30;
+% % z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
+% % z=sqrt(r3)+30;
+% % boundaryLim=...
+% %     [-20,-20,-20,-20,-20;%Lower Lim
+% %     20,20,20,20,20];%Higher Lim
+% %Dim1,Dim2,Dim3
+% % Test part2, formulas for fitting scatters
 % boundaryLim=...
-%     [-20,-20,-20,-20,-20;%Lower Lim
-%     20,20,20,20,20];%Higher Lim
-%Dim1,Dim2,Dim3
-% Test part2, formulas for fitting scatters
-boundaryLim=...
-    [0,-2,-20,-20,-20;%Lower Lim
-    5,20,20,20,20];%Higher Lim
-syms x yv
-yInit=cos(x./pi*4)*10+1;yInitFunc=matlabFunction(yInit);
-yFit=cos(x.*a1)*a2+a3;yFitFunc=matlabFunction(yFit);
-yf=yFit-yv;
-yfFunc=matlabFunction(yf);
-nScatters=50;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
-scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
-scatterFig=figure;
-plot(scatters(:,1),scatters(:,2),'*');
-iVars=[4,5];
-yfFuncs=funcByVal(yfFunc,iVars,scatters);
-% varsV=num2cell(symvar(yf));varsV(iVars)=mat2cell(scatters,length(scatters),[1,1]);
-% z=sqrt(simplify(sum((yfFuncs./sqrt(1+x1.^2)).^2))./(1e1));
-% z=sqrt(simplify(sum((yfFuncs./1).^2))./(1e1));
-z=sqrt(sum((yfFuncs./1).^2)./(1e1));
-zFunc=matlabFunction(z);
-minPos=minsRRS(zFunc,boundaryLim);
-[minZ,minR]=min(minPos(:,end));
-yR=funcByVal(yFitFunc,[1:3],minPos(minR,1:3));
-% hold on;
-plotFuncOn(0,5,matlabFunction(yR),scatterFig);
+%     [0,-2,-20,-20,-20;%Lower Lim
+%     5,20,20,20,20];%Higher Lim
+% syms x yv
+% yInit=cos(x./pi*4)*10+1;yInitFunc=matlabFunction(yInit);
+% yFit=cos(x.*a1)*a2+a3;yFitFunc=matlabFunction(yFit);
+% yf=yFit-yv;
+% yfFunc=matlabFunction(yf);
+% nScatters=50;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
+% scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
+% scatterFig=figure;
+% plot(scatters(:,1),scatters(:,2),'*');
+% iVars=[4,5];
+% yfFuncs=funcByVal(yfFunc,iVars,scatters);
+% % varsV=num2cell(symvar(yf));varsV(iVars)=mat2cell(scatters,length(scatters),[1,1]);
+% % z=sqrt(simplify(sum((yfFuncs./sqrt(1+x1.^2)).^2))./(1e1));
+% % z=sqrt(simplify(sum((yfFuncs./1).^2))./(1e1));
+% z=sqrt(sum((yfFuncs./1).^2)./(1e1));
+% zFunc=matlabFunction(z);
+% minPos=localMinsRRS1(zFunc,boundaryLim);
+% [minZ,minR]=min(minPos(:,end));
+% yR=funcByVal(yFitFunc,[1:3],minPos(minR,1:3));
+% % hold on;
+% plotFuncOn(0,5,matlabFunction(yR),scatterFig);
 
-function pos=minsRRS(zFunc,boundaryLim)
+function [pos,fig]=localMinsRRS(zFunc,boundaryLim)
 tic;
 syms zv
 fFunc=matlabFunction(zFunc-zv);varsList=symvar(sym(fFunc));varsListStr=string(varsList);
@@ -96,7 +96,7 @@ stopFlag=0;
 count=0;
 countA=0;
 while stopFlag==0 && count<400 || countA<=Ndz
-    
+    if 0
     % Points fission
     rFiss=min(boundaryLim(2,:)-boundaryLim(1,:))/(nPoints/1);
     nFiss=9;%Each Dim
@@ -133,7 +133,9 @@ while stopFlag==0 && count<400 || countA<=Ndz
         vmVec(activePList(indexMove),:)=zeros(nMove,nDim);
         count=count+1;
     end
+    end
     
+    indexMove=[];%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Points falling
     [activePList_noMove,activePList_noMoveIndex]=setdiff(activePList,activePList(indexMove));
     if 1
