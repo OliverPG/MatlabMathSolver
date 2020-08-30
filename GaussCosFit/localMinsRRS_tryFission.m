@@ -21,28 +21,28 @@ boundaryLim=...
     [0,-2,-20,-20,-20;%Lower Lim
     5,20,20,20,20];%Higher Lim
 syms x yv
-yInit=cos(x./pi*4)*10+0;yInitFunc=matlabFunction(yInit);
-yFit=cos(x.*a1)*a2+0;yFitFunc=matlabFunction(yFit);
+yInit=cos(x./pi*4)*10+1;yInitFunc=matlabFunction(yInit);
+yFit=cos(x.*a1)*a2+a3;yFitFunc=matlabFunction(yFit);
 yf=yFit-yv;
 yfFunc=matlabFunction(yf);
 nScatters=50;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
 scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
 scatterFig=figure;
 plot(scatters(:,1),scatters(:,2),'*');
-iVars=[3,4];
+iVars=[4,5];
 yfFuncs=funcByVal(yfFunc,iVars,scatters);
 % varsV=num2cell(symvar(yf));varsV(iVars)=mat2cell(scatters,length(scatters),[1,1]);
 % z=sqrt(simplify(sum((yfFuncs./sqrt(1+x1.^2)).^2))./(1e1));
 % z=sqrt(simplify(sum((yfFuncs./1).^2))./(1e1));
 z=sqrt(sum((yfFuncs./1).^2)./(1e1));
 zFunc=matlabFunction(z);
-minPos=minsRRS(zFunc,boundaryLim);
+minPos=localMinsRRS1(zFunc,boundaryLim);
 [minZ,minR]=min(minPos(:,end));
-yR=funcByVal(yFitFunc,[1:2],minPos(minR,1:2));
+yR=funcByVal(yFitFunc,[1:3],minPos(minR,1:3));
 % hold on;
 plotFuncOn(0,5,matlabFunction(yR),scatterFig);
 
-function pos=minsRRS(zFunc,boundaryLim)
+function [pos,fig]=localMinsRRS1(zFunc,boundaryLim)
 tic;
 syms zv
 fFunc=matlabFunction(zFunc-zv);varsList=symvar(sym(fFunc));varsListStr=string(varsList);
@@ -96,68 +96,69 @@ stopFlag=0;
 count=0;
 countA=0;
 while stopFlag==0 && count<400 || countA<=Ndz
-    if 1
-        % Points fission
-        rFiss=min(boundaryLim(2,:)-boundaryLim(1,:))/(nPoints/1);
-        nFiss=5;%Each Dim
-        [pFissList,pFissList3D]=pointsOnCubeFace(pos(activePList,1:end-1),rFiss,nFiss);
-        nTotalFiss=length(pFissList(:,1));
-        [r_pFiss,c_pFiss,p_pFiss]=size(pFissList3D);
-        nTotalFiss=r_pFiss*p_pFiss;
-        % Check over boundary
-        pFissActiveList=1:nTotalFiss;
-        expandLowBd=repmat(boundaryLim(1,1:nDim-1),r_pFiss,1,p_pFiss);
-        expandUpBd=repmat(boundaryLim(2,1:nDim-1),r_pFiss,1,p_pFiss);
-        indexLow=find(pFissList3D-expandLowBd<0);
-        indexUp=find(pFissList3D-expandUpBd>0);
-        if ~isempty(indexLow)
-            pFissList3D(indexLow)=expandLowBd(indexLow);
-        end
-        if ~isempty(indexUp)
-            pFissList3D(indexUp)=expandUpBd(indexUp);
-        end
-        pFissCell=mat2cell(pFissList3D,r_pFiss,ones(1,c_pFiss),p_pFiss);
-        zFissList=reshape(zFunc(pFissCell{:}),r_pFiss,p_pFiss);
-        [zFissMinList,zFissMinIndex]=min(zFissList,[],2);
-        indexMove=find(zFissMinList<pos(activePList,end));
-        if ~isempty(indexMove)
-            nMove=length(indexMove);
-            select_pFissList=[];
-            for iMove=1:nMove
-                select_pFissList(iMove,:)=pFissList3D(indexMove(iMove),:,zFissMinIndex(iMove));
-            end
-            %         copy_pFissList=pFissList3D(indexMove,:,zFissMinIndex);
-            oldPos=pos;
-            pos(activePList(indexMove),:)=[select_pFissList,zFissMinList(indexMove)];
-            vmVec(activePList(indexMove),:)=zeros(nMove,nDim);
-            count=count+1;
-        end
+    if 0
+    % Points fission
+    rFiss=min(boundaryLim(2,:)-boundaryLim(1,:))/(nPoints/1);
+    nFiss=9;%Each Dim
+    [pFissList,pFissList3D]=pointsOnCubeFace(pos(activePList,1:end-1),rFiss,nFiss);
+    nTotalFiss=length(pFissList(:,1));
+    [r_pFiss,c_pFiss,p_pFiss]=size(pFissList3D);
+    nTotalFiss=r_pFiss*p_pFiss;
+    % Check over boundary
+    pFissActiveList=1:nTotalFiss;
+    expandLowBd=repmat(boundaryLim(1,1:nDim-1),r_pFiss,1,p_pFiss);
+    expandUpBd=repmat(boundaryLim(2,1:nDim-1),r_pFiss,1,p_pFiss);
+    indexLow=find(pFissList3D-expandLowBd<0);
+    indexUp=find(pFissList3D-expandUpBd>0);
+    if ~isempty(indexLow)
+        pFissList3D(indexLow)=expandLowBd(indexLow);
     end
+    if ~isempty(indexUp)
+        pFissList3D(indexUp)=expandUpBd(indexUp);
+    end
+    pFissCell=mat2cell(pFissList3D,r_pFiss,ones(1,c_pFiss),p_pFiss);
+    zFissList=reshape(zFunc(pFissCell{:}),r_pFiss,p_pFiss);
+    [zFissMinList,zFissMinIndex]=min(zFissList,[],2);
+    indexMove=find(zFissMinList<pos(activePList,end));
+    indexMove=[];%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(indexMove)
+        nMove=length(indexMove);
+        select_pFissList=[];
+        for iMove=1:nMove
+            select_pFissList(iMove,:)=pFissList3D(indexMove(iMove),:,zFissMinIndex(iMove));
+        end
+        %         copy_pFissList=pFissList3D(indexMove,:,zFissMinIndex);
+        oldPos=pos;
+        pos(activePList(indexMove),:)=[select_pFissList,zFissMinList(indexMove)];
+        vmVec(activePList(indexMove),:)=zeros(nMove,nDim);
+        count=count+1;
+    end
+    end
+    
+    indexMove=[];%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Points falling
-    activePList_noMove=setdiff(activePList,activePList(indexMove));posActiCell_BV=mat2cell(pos(activePList,varsIndex),length(activePList),ones(1,nVarBv));
+    [activePList_noMove,activePList_noMoveIndex]=setdiff(activePList,activePList(indexMove));
+    if 1
+    posActiCell_BV=mat2cell(pos(activePList,varsIndex),length(activePList),ones(1,nVarBv));
     sBV_v=sBVFunc(posActiCell_BV{:});
     FgpVec(activePList,:)=GVec(activePList,:)-repmat(dot(GVec(activePList,:),sBV_v,2),1,nDim).*sBV_v;
     fVec=zeros(size(FgpVec));
-    if ~isempty(activePList_noMove)        
-        fVec(activePList_noMove,:)=-abs(repmat(dot(GVec(activePList_noMove,:),sBV_v,2),1,nDim)).*vmVec(activePList_noMove,:)./vmVnorm(activePList_noMove,:).*mu;        
+%     if ~isempty(activePList_noMove)
+%         fVec(activePList_noMove,:)=-abs(repmat(dot(GVec(activePList_noMove,:),sBV_v(activePList_noMoveIndex,:),2),1,nDim)).*vmVec(activePList_noMove,:)./vmVnorm(activePList_noMove,:).*mu;
+%     end
+    fVec(activePList,:)=-abs(repmat(dot(GVec(activePList,:),sBV_v(:,:),2),1,nDim)).*vmVec(activePList,:)./vmVnorm(activePList,:).*mu;
+    aVec(activePList,:)=(FgpVec(activePList,:)+fVec(activePList,:))./m0;
+    dvVec(activePList,:)=aVec(activePList,:).*dtVec(activePList,:);
+    vmVec(activePList,:)=vmVec(activePList,:)+dvVec(activePList,:);
+    vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
+    rVec(activePList,:)=vmVec(activePList,:).*dtVec(activePList,:);
+    oldPos=pos;
+    pos(activePList,:)=pos(activePList,:)+rVec(activePList,:);
+    posActiCell_z=mat2cell(pos(activePList,1:nDim-1),length(activePList),ones(1,nDim-1));
+    pos(activePList,end)=zFunc(posActiCell_z{:});
+    countA=count+1;
     end
-    %         if countA==0
-    %             fVec=zeros(size(FgpVec));
-    %             fOld=fVec;
-    %         else
-    %             fOld=fVec;
-    %             fVec(activePList_noMove,:)=-abs(repmat(dot(GVec(activePList_noMove,:),sBV_v,2),1,nDim)).*vmVec(activePList_noMove,:)./vmVnorm(activePList_noMove,:).*mu;
-    %         end
-        aVec(activePList,:)=(FgpVec(activePList,:)+fVec(activePList,:))./m0;
-        dvVec(activePList,:)=aVec(activePList,:).*dtVec(activePList,:);
-        vmVec(activePList,:)=vmVec(activePList,:)+dvVec(activePList,:);
-        vmVnorm=vecnorm(vmVec,2,2);vmVnorm=repmat(vmVnorm,1,nDim)+err;
-        rVec(activePList,:)=vmVec(activePList,:).*dtVec(activePList,:);
-        oldPos=pos;
-        pos(activePList,:)=pos(activePList,:)+rVec(activePList,:);
-        posActiCell_z=mat2cell(pos(activePList,1:nDim-1),length(activePList),ones(1,nDim-1));
-        pos(activePList,end)=zFunc(posActiCell_z{:});
-        countA=countA+1;
+    
     dz=pos(:,end)-oldPos(:,end);
     dzMat=circshift(dzMat,-1,2);dzMat(:,end)=dz;dzMatAver=mean(dzMat,2);
     figure(fig);subplot(rpics,cpics,1);
