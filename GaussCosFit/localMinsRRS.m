@@ -17,16 +17,19 @@ syms a1 a2 a3 a4
 %     20,20,20,20,20];%Higher Lim
 %Dim1,Dim2,Dim3
 % Test part2, formulas for fitting scatters
+% boundaryLim=...
+%     [0,-2,-20,-20,-20;%Lower Lim
+%     10,20,20,20,20];%Higher Lim
 boundaryLim=...
-    [0,-2,-20,-20,-20;%Lower Lim
-    10,20,20,20,20];%Higher Lim
+    [0,-2,-20,-20;%Lower Lim
+    10,20,20,20];%Higher Lim
 syms x yv
-yInit=exp(-x^2./pi*2)*cos(x./2*3*pi)*10+1;yInitFunc=matlabFunction(yInit);
-yFit=exp(-x^2./pi*a4)*cos(x.*a1)*a2+a3;yFitFunc=matlabFunction(yFit);
-nParaVars=4;
+yInit=exp(-x^2./pi*2)*cos(x./1*3*pi)*10+1;yInitFunc=matlabFunction(yInit);
+yFit=exp(-x^2./pi*2)*cos(x.*a1)*10+1;yFitFunc=matlabFunction(yFit);
+nParaVars=1;
 yf=yFit-yv;nVars=length(symvar(yf));
 yfFunc=matlabFunction(yf);
-nScatters=100;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
+nScatters=80;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
 scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
 scatterFig=figure;
 plot(scatters(:,1),scatters(:,2),'o');
@@ -45,7 +48,7 @@ yR=funcByVal(yFitFunc,1:nParaVars,minPos(minR,1:nParaVars));
 plotFuncOn(x1Vec(1),x1Vec(end),matlabFunction(yR),scatterFig);
 toc;
 function [pos,fig]=localMinsRRS1(zFunc,bdLim)
-% zFunc=f(xi)
+% zFunc=matlabFunction(f(xi))
 % bdLim=[UpLim_x1 UpLim_x2 ... UpLimZv;
 %        LoLim_x1 LoLim_x2 ... LoLimZv;]
 tic;
@@ -73,7 +76,7 @@ else % nVar==2
     plot(x1v,zGrid,'--','LineWidth',0.5,'color','black');hold on;
 end
 err=1e-20;% zero
-% vError=1e-10;% zero for velocity
+vError=1e-10;% zero for velocity
 dzError=1e-3;% zero for dz
 nDim=nVar;% motion dimision or number of variates
 dt=0.05;% time evolution factor
@@ -92,7 +95,7 @@ nPoints=100;
 nPerDim=floor(nPoints^(1/(nDim-1)));
 nTotalDim=nPerDim^(nDim-1);
 nRand=nPoints-nTotalDim;
-nFlys=20;
+nFlys=40;
 activePList=1:nPoints;
 activePListLen=length(activePList);
 % pos=rand(nPoints,nDim);% Each row as the position of a point(random produce)
@@ -148,8 +151,9 @@ while stopFlag==0 && count<100 || count<=Ndz
     posZFlys=reshape(zFunc(posRepActiCell_z{:}),activePListLen,nFlys);
     [zMins,zMinsIndex]=min(posZFlys,[],2);
     zMinsIndexE1=find(zMinsIndex==1);
+%     zMinsIndexE1=find(zMinsIndex<nFlys);
     if ~isempty(zMinsIndexE1)
-        vmVecA(zMinsIndexE1,:)=0;
+        vmVecA(zMinsIndexE1,:)=vError;
     end        
     xyMinsPos=NaN(activePListLen,nDim-1);
     for index=1:activePListLen
@@ -181,12 +185,12 @@ while stopFlag==0 && count<100 || count<=Ndz
     countRep=repmat(count,nPoints,1);
     subplot(rpics,cpics,2);hold on;scatter(countRep,pos(:,end),'.');title(['z',string(max(pos(:,end)))]);
     if count>Ndz
-        subplot(rpics,cpics,3);hold on;scatter(countRep,dzMatAver,'.');title(['dzA',string(max(dzMatAver))]);
+        subplot(rpics,cpics,3);hold on;scatter(countRep,dzMatAver,'.');title(['dzAver',string(Ndz),'steps',string(max(dzMatAver))]);
     end
     subplot(rpics,cpics,4);hold on;scatter(repmat(count,activePListLen,1),activePList,'.');title(['activePList',string(activePListLen)]);
     drawnow;
-    %z and position compare
-    errComp=1;
+    %z and position compare, combine closed points
+    errComp=min(bdLim(2,:)-bdLim(1,:))/1000;
     [~,indexSortPos]=sort(posA(:,end));
     sortPos=posA(indexSortPos,:);
     dPos=sortPos(1:end-1,:)-sortPos(2:end,:);    
