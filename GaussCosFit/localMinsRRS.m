@@ -1,53 +1,53 @@
-%飞沙走石法(FeiShaZouShiFa)
-%Random Running Stones
-%Expulso
-
-clear;clc;tic;
-syms a1 a2 a3 a4
-% Test part1, formulas for different dims
-% r2=x1.^2+2.*x2.^2;
-% r3=x1.^2+3.*x2.^2+2.*x3.^2+2.*x4.^2;
-% z=cos(x1).*x1;
-% z=x1.^5./10000;
-% z=sqrt(r2)+30;
-% z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
-% z=sqrt(r3)+30;
+% %飞石法(FeiShiFa)
+% %Random Running Stones
+% %Expulso
+% 
+% clear;clc;tic;
+% syms a1 a2 a3 a4
+% % Test part1, formulas for different dims
+% % r2=x1.^2+2.*x2.^2;
+% % r3=x1.^2+3.*x2.^2+2.*x3.^2+2.*x4.^2;
+% % z=cos(x1).*x1;
+% % z=x1.^5./10000;
+% % z=sqrt(r2)+30;
+% % z=10-10.*exp(-r2./100).*cos(2.*pi./5.*sqrt(r2));
+% % z=sqrt(r3)+30;
+% % boundaryLim=...
+% %     [-20,-20,-20,-20,-20;%Lower Lim
+% %     20,20,20,20,20];%Higher Lim
+% %Dim1,Dim2,Dim3
+% % Test part2, formulas for fitting scatters
+% % boundaryLim=...
+% %     [0,-2,-20,-20,-20;%Lower Lim
+% %     10,20,20,20,20];%Higher Lim
 % boundaryLim=...
-%     [-20,-20,-20,-20,-20;%Lower Lim
-%     20,20,20,20,20];%Higher Lim
-%Dim1,Dim2,Dim3
-% Test part2, formulas for fitting scatters
-% boundaryLim=...
-%     [0,-2,-20,-20,-20;%Lower Lim
-%     10,20,20,20,20];%Higher Lim
-boundaryLim=...
-    [0,-2,-20,-20;%Lower Lim
-    10,20,20,20];%Higher Lim
-syms x yv
-yInit=exp(-x^2./pi*2)*cos(x./1*3*pi)*10+1;yInitFunc=matlabFunction(yInit);
-yFit=exp(-x^2./pi*2)*cos(x.*a1)*10+1;yFitFunc=matlabFunction(yFit);
-nParaVars=1;
-yf=yFit-yv;nVars=length(symvar(yf));
-yfFunc=matlabFunction(yf);
-nScatters=80;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
-scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
-scatterFig=figure;
-plot(scatters(:,1),scatters(:,2),'o');
-iVars=[nVars-1,nVars];
-yfFuncs=funcByVal(yfFunc,iVars,scatters);
-% varsV=num2cell(symvar(yf));varsV(iVars)=mat2cell(scatters,length(scatters),[1,1]);
-% z=sqrt(simplify(sum((yfFuncs./sqrt(1+x1.^2)).^2))./(1e1));
-% z=sqrt(simplify(sum((yfFuncs./1).^2))./(1e1));
-z=sqrt(sum((yfFuncs./1).^2)./(1e1));
-% z=vpa(z);
-zFunc=matlabFunction(z);
-minPos=localMinsRRS1(zFunc,boundaryLim);
-[minZ,minR]=min(minPos(:,end));
-yR=funcByVal(yFitFunc,1:nParaVars,minPos(minR,1:nParaVars));
-% hold on;
-plotFuncOn(x1Vec(1),x1Vec(end),matlabFunction(yR),scatterFig);
-toc;
-function [pos,fig]=localMinsRRS1(zFunc,bdLim)
+%     [0,-2,-20,-20;%Lower Lim
+%     10,20,20,20];%Higher Lim
+% syms x yv
+% yInit=exp(-x^2./pi*2)*cos(x./1*3*pi)*5+1;yInitFunc=matlabFunction(yInit);
+% yFit=exp(-x^2./pi*2)*cos(x.*a1)*a2+1;yFitFunc=matlabFunction(yFit);
+% nParaVars=2;
+% yf=yFit-yv;nVars=length(symvar(yf));
+% yfFunc=matlabFunction(yf);
+% nScatters=80;x1Vec=linspace(boundaryLim(1,1),boundaryLim(2,1),nScatters)';
+% scatters=[x1Vec,yInitFunc(x1Vec)+randi(5,nScatters,1)./5-0.5];
+% scatterFig=figure;
+% plot(scatters(:,1),scatters(:,2),'o');
+% iVars=[nVars-1,nVars];
+% yfFuncs=funcByVal(yfFunc,iVars,scatters);
+% % varsV=num2cell(symvar(yf));varsV(iVars)=mat2cell(scatters,length(scatters),[1,1]);
+% % z=sqrt(simplify(sum((yfFuncs./sqrt(1+x1.^2)).^2))./(1e1));
+% % z=sqrt(simplify(sum((yfFuncs./1).^2))./(1e1));
+% z=sqrt(sum((yfFuncs./1).^2)./(1e1));
+% % z=vpa(z);
+% zFunc=matlabFunction(z);
+% minPos=localMinsRRS1(zFunc,boundaryLim);
+% [minZ,minR]=min(minPos(:,end));
+% yR=funcByVal(yFitFunc,1:nParaVars,minPos(minR,1:nParaVars));
+% % hold on;
+% plotFuncOn(x1Vec(1),x1Vec(end),matlabFunction(yR),scatterFig);
+% toc;
+function [pos,fig]=localMinsRRS(zFunc,bdLim)
 % zFunc=matlabFunction(f(xi))
 % bdLim=[UpLim_x1 UpLim_x2 ... UpLimZv;
 %        LoLim_x1 LoLim_x2 ... LoLimZv;]
@@ -185,7 +185,7 @@ while stopFlag==0 && count<100 || count<=Ndz
     countRep=repmat(count,nPoints,1);
     subplot(rpics,cpics,2);hold on;scatter(countRep,pos(:,end),'.');title(['z',string(max(pos(:,end)))]);
     if count>Ndz
-        subplot(rpics,cpics,3);hold on;scatter(countRep,dzMatAver,'.');title(['dzAver',string(Ndz),'steps',string(max(dzMatAver))]);
+        subplot(rpics,cpics,3);hold on;scatter(countRep,dzMatAver,'.');title(['dzAver',string(max(dzMatAver))]);
     end
     subplot(rpics,cpics,4);hold on;scatter(repmat(count,activePListLen,1),activePList,'.');title(['activePList',string(activePListLen)]);
     drawnow;
